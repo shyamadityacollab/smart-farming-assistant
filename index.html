@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>KrishiDrishti AI - Smart Farming Assistant (SIH Prototype)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- ==================== TOP NAVIGATION BAR ==================== -->
+  <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-3 sm:px-6 py-2.5 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Logo & Badge -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-900/40 text-lg sm:text-xl font-bold flex-shrink-0">
+          🌱
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent" data-i18n="appTitle">
+              KrishiDrishti AI
+            </h1>
+            <span class="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60" data-i18n="badge">
+              SIH
+            </span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-slate-400 font-medium" data-i18n="tagline">Sense → Analyze → Predict → Act</p>
+        </div>
+      </div>
+
+      <!-- Controls: Voice Advisory & Multilingual Switcher -->
+      <div class="flex items-center gap-2">
+        <button id="btnVoiceAdvisory" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] sm:text-xs font-semibold text-emerald-300 border border-emerald-800/50 transition-all shadow-sm">
+          <span>🔊</span>
+          <span class="hidden xs:inline" data-i18n="listenAdvisory">Voice Advisory</span>
+          <span class="xs:hidden">Voice</span>
+        </button>
+
+        <div class="relative">
+          <select id="langSelect" class="bg-slate-900 text-slate-200 text-[11px] sm:text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="pb">ਪੰਜਾਬੀ</option>
+            <option value="mr">मराठी</option>
+            <option value="te">తెలుగు</option>
+            <option value="ta">தமிழ்</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Navigation Tabs (Horizontally Scrollable on Mobile) -->
+    <div class="max-w-7xl mx-auto mt-2 pt-2 border-t border-slate-800/60 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs">
+      <button data-tab-target="dashboard" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold bg-emerald-600 text-white shadow-lg transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>📊</span> <span data-i18n="navDashboard">Dashboard</span>
+      </button>
+      <button data-tab-target="sensor-input" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>🤖</span> <span data-i18n="navSensorInput">Sensor AI Brain</span>
+      </button>
+      <button data-tab-target="vision" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>🔬</span> <span data-i18n="navVision">AI Crop Doctor</span>
+      </button>
+      <button data-tab-target="weather" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>🌦️</span> <span data-i18n="navWeather">6h Weather</span>
+      </button>
+      <button data-tab-target="leaching" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>💧</span> <span data-i18n="navLeaching">Leaching Sim</span>
+      </button>
+      <button data-tab-target="hardware" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>⚙️</span> <span data-i18n="navHardware">Hardware Specs</span>
+      </button>
+      <button data-tab-target="pitch" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+        <span>🏆</span> <span data-i18n="navPitch">Pitch Deck</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 flex-1 w-full">
+
+    <!-- ==================== TAB 1: LIVE IOT DASHBOARD ==================== -->
+    <div id="tab-dashboard" class="tab-panel space-y-5">
+      
+      <!-- Top 4 Primary Live Telemetry Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- Metric 1: Soil Moisture -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 hover:border-sky-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
+            <span data-i18n="soilMoisture">Soil Moisture</span>
+            <span class="text-sky-400 text-sm">🌱</span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="valMoisture" class="text-2xl sm:text-3xl font-extrabold text-sky-400">28.0%</span>
+            <span class="text-[10px] text-slate-400 font-mono">Tgt: <span id="dispThreshold">38%</span></span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 sm:h-2 mt-2.5 overflow-hidden">
+            <div id="barMoisture" class="bg-gradient-to-r from-amber-500 to-sky-400 h-full rounded-full transition-all duration-500" style="width: 28%"></div>
+          </div>
+          <div class="flex justify-between text-[9px] text-slate-500 mt-1 font-mono">
+            <span>WP: 14%</span>
+            <span>FC: 32%</span>
+          </div>
+        </div>
+
+        <!-- Metric 2: Ambient Temperature -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 hover:border-amber-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
+            <span data-i18n="ambientTemp">Ambient Temp</span>
+            <span class="text-amber-400 text-sm">🌡️</span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="valTemp" class="text-2xl sm:text-3xl font-extrabold text-amber-400">31.5°C</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800">Normal</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-2.5 flex items-center justify-between">
+            <span>Range</span>
+            <span class="font-mono text-slate-300">24° - 35°C</span>
+          </div>
+        </div>
+
+        <!-- Metric 3: Air Humidity -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 hover:border-teal-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
+            <span data-i18n="airHumidity">Air Humidity</span>
+            <span class="text-teal-400 text-sm">💧</span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="valHumidity" class="text-2xl sm:text-3xl font-extrabold text-teal-400">58%</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800">Optimal</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-2.5 flex items-center justify-between">
+            <span>Dew Point</span>
+            <span class="font-mono text-slate-300">22.1°C</span>
+          </div>
+        </div>
+
+        <!-- Metric 4: Vapor Pressure Deficit (VPD) -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 hover:border-indigo-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
+            <span data-i18n="vpd">VPD Stress</span>
+            <span class="text-indigo-400 text-sm">🍃</span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span id="valVpd" class="text-2xl sm:text-3xl font-extrabold text-indigo-400">1.95 kPa</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">Moderate</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-2.5 flex items-center justify-between">
+            <span>Target</span>
+            <span id="dispVpdReq" class="font-mono text-slate-300">0.8-1.4 kPa</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Closed-Loop Sense-and-Control State Machine & Live Relay Action -->
+      <div class="glass-panel-emerald rounded-2xl p-4 sm:p-6 border border-emerald-800/40">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <div id="relayLed" class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399] flex-shrink-0"></div>
+              <h3 class="font-bold text-sm sm:text-base text-slate-100" data-i18n="controlLoopTitle">
+                Real-Time Sense-and-Control Loop (ESP32 State)
+              </h3>
+            </div>
+            <p id="pumpReasonText" class="text-xs text-emerald-200/80 leading-relaxed font-mono">
+              Predictive Hold: 85% rain forecasted within 6h. Delaying irrigation to save water and prevent fertilizer leaching.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div id="badgePumpStatus" class="px-3 py-1.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500 whitespace-nowrap">
+              IRRIGATION DELAYED
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 sm:gap-4 mt-4 pt-3 sm:pt-4 border-t border-emerald-800/30 text-center">
+          <div>
+            <div class="text-[10px] sm:text-[11px] text-emerald-300 font-medium" data-i18n="waterSaved">Water Saved</div>
+            <div id="statWaterSaved" class="text-base sm:text-lg font-bold text-white mt-0.5">1,450 L</div>
+          </div>
+          <div>
+            <div class="text-[10px] sm:text-[11px] text-emerald-300 font-medium" data-i18n="energySaved">Energy Conserved</div>
+            <div id="statEnergySaved" class="text-base sm:text-lg font-bold text-white mt-0.5">820 Wh</div>
+          </div>
+          <div>
+            <div class="text-[10px] sm:text-[11px] text-emerald-300 font-medium" data-i18n="fertilizerSaved">Nitrate Saved</div>
+            <div id="statFertSaved" class="text-base sm:text-lg font-bold text-emerald-400 mt-0.5">18.5 kg</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Chart & Interactive Simulation Controller Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-2">
+              <span>📈</span> Continuous Live Telemetry Stream (Moisture vs. Temp)
+            </h3>
+            <span class="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-emerald-400">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 3s Sync
+            </span>
+          </div>
+          <div class="h-56 sm:h-64 w-full">
+            <canvas id="telemetryChart"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3.5">
+          <h3 class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-2">
+            <span>🎛️</span> Field Parameter Calibration & Simulation
+          </h3>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-300">
+              <span>Simulate Soil Moisture</span>
+              <span id="sliderMoistureVal" class="font-mono text-sky-400 font-bold">28%</span>
+            </div>
+            <input id="sliderMoisture" type="range" min="5" max="90" value="28" class="w-full h-2 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs text-slate-300 font-semibold" data-i18n="soilType">Soil Type</label>
+            <select id="selectSoil" class="w-full bg-slate-900 text-slate-200 text-xs rounded-lg p-2 border border-slate-700">
+              <option value="Loamy Soil">Loamy Soil (Target: 36% Moisture)</option>
+              <option value="Sandy Soil">Sandy Soil (Target: 22% Moisture)</option>
+              <option value="Clay / Black Soil">Clay / Black Cotton Soil (Target: 50%)</option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs text-slate-300 font-semibold" data-i18n="cropType">Select Crop</label>
+            <select id="selectCrop" class="w-full bg-slate-900 text-slate-200 text-xs rounded-lg p-2 border border-slate-700">
+              <option value="Tomato / Vegetables">Tomato / Vegetables</option>
+              <option value="Paddy / Rice">Paddy / Rice</option>
+              <option value="Wheat">Wheat</option>
+              <option value="Cotton">Cotton</option>
+              <option value="Sugarcane">Sugarcane</option>
+            </select>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-slate-200">Simulate Rain Forecast</div>
+              <div class="text-[10px] text-slate-400">Forces 85% rain probability</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="toggleRainSim" checked class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 2: MANUAL SENSOR INPUT & AI FARM BRAIN ==================== -->
+    <div id="tab-sensor-input" class="tab-panel hidden space-y-5">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2" data-i18n="sensorInputTitle">
+            <span>🤖</span> Manual Sensor Reading Input & AI Farm Brain Advisory
+          </h2>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="sensorInputDesc">
+            Enter actual readings from your field sensors or test hypothetical scenarios to get instant AI-generated irrigation runtimes, VPD stress, and fertilizer advisories.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Test Scenarios Bar -->
+      <div class="glass-panel rounded-xl p-3.5 border border-slate-800 space-y-2">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" data-i18n="quickScenarios">
+          Quick-Test Preset Scenarios:
+        </div>
+        <div class="flex flex-wrap gap-1.5 text-xs">
+          <button id="presetDrought" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-red-950 text-red-300 border border-slate-700 hover:border-red-700 transition-all font-semibold" data-i18n="scenarioDrought">
+            🔥 Severe Heatwave & Dry Soil
+          </button>
+          <button id="presetFungal" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-950 text-amber-300 border border-slate-700 hover:border-amber-700 transition-all font-semibold" data-i18n="scenarioFungal">
+            🍄 High Humidity Fungal Outbreak Risk
+          </button>
+          <button id="presetOptimal" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-950 text-emerald-300 border border-slate-700 hover:border-emerald-700 transition-all font-semibold" data-i18n="scenarioOptimal">
+            ✨ Balanced & Optimal Condition
+          </button>
+          <button id="presetPreRain" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-sky-950 text-sky-300 border border-slate-700 hover:border-sky-700 transition-all font-semibold" data-i18n="scenarioPreRain">
+            🌧️ Dry Soil + Rain Forecast
+          </button>
+        </div>
+      </div>
+
+      <!-- Input Form & AI Output Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3.5">
+          <h3 class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-2">
+            <span>📝</span> Sensor Reading Form
+          </h3>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="text-slate-300 font-semibold block mb-1" data-i18n="inputSoilMoisture">Soil Moisture Reading (%)</label>
+              <input id="inMoisture" type="number" step="0.1" min="0" max="100" value="22.0" class="w-full bg-slate-900 text-white rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500 font-mono text-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-slate-300 font-semibold block mb-1" data-i18n="inputTemp">Ambient Temp (°C)</label>
+                <input id="inTemp" type="number" step="0.5" value="34.5" class="w-full bg-slate-900 text-white rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500 font-mono text-sm">
+              </div>
+              <div>
+                <label class="text-slate-300 font-semibold block mb-1" data-i18n="inputHumidity">Air Humidity (%)</label>
+                <input id="inHumidity" type="number" step="1" min="10" max="100" value="48" class="w-full bg-slate-900 text-white rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500 font-mono text-sm">
+              </div>
+            </div>
+
+            <div>
+              <label class="text-slate-300 font-semibold block mb-1" data-i18n="inputSoilTemp">Soil Temperature (°C, Optional)</label>
+              <input id="inSoilTemp" type="number" step="0.5" value="29.0" class="w-full bg-slate-900 text-white rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500 font-mono text-sm">
+            </div>
+
+            <div>
+              <label class="text-slate-300 font-semibold block mb-1" data-i18n="cropType">Crop Type</label>
+              <select id="inCrop" class="w-full bg-slate-900 text-slate-200 rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500">
+                <option value="Tomato / Vegetables">Tomato / Vegetables</option>
+                <option value="Paddy / Rice">Paddy / Rice</option>
+                <option value="Wheat">Wheat</option>
+                <option value="Cotton">Cotton</option>
+                <option value="Sugarcane">Sugarcane</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-slate-300 font-semibold block mb-1" data-i18n="inputCropStage">Crop Growth Stage</label>
+              <select id="inStage" class="w-full bg-slate-900 text-slate-200 rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500">
+                <option value="Vegetative Stage">Vegetative Growth Stage</option>
+                <option value="Flowering Stage">Flowering & Fruit Setting</option>
+                <option value="Fruiting / Grain Fill">Fruiting / Grain Filling Stage</option>
+                <option value="Maturity / Harvest">Maturity / Ripening Stage</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-slate-300 font-semibold block mb-1" data-i18n="soilType">Soil Profile</label>
+              <select id="inSoil" class="w-full bg-slate-900 text-slate-200 rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-emerald-500">
+                <option value="Loamy Soil">Loamy Soil (Balanced Root Aeration)</option>
+                <option value="Sandy Soil">Sandy Soil (Rapid Drainage / Fast Leaching)</option>
+                <option value="Clay / Black Soil">Clay / Black Cotton Soil (High Moisture Retention)</option>
+              </select>
+            </div>
+
+            <button id="btnSubmitSensorReadings" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 mt-2">
+              <span>🤖</span> <span data-i18n="btnAnalyzeSensors">Generate AI Agricultural Advisory</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-4 flex flex-col justify-between">
+          
+          <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
+              <div>
+                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">AI Farm Brain Multi-Matrix Output</span>
+                <h3 class="text-base sm:text-lg font-extrabold text-white mt-0.5">Irrigation & Microclimate Prescription</h3>
+              </div>
+              <div id="advIrrigationStatus" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 self-start sm:self-auto">
+                OPTIMAL
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div class="text-xs text-slate-400 font-semibold">Recommended Drip Runtime</div>
+                <div id="advPumpRuntime" class="text-xl sm:text-2xl font-black text-sky-400 mt-0.5">32 Mins</div>
+                <p class="text-[10px] text-slate-500">Targeting active root zone depth</p>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div class="text-xs text-slate-400 font-semibold">Calculated Water Volume</div>
+                <div id="advWaterVolume" class="text-xl sm:text-2xl font-black text-teal-400 mt-0.5">1,450 L / acre</div>
+                <p class="text-[10px] text-slate-500">Precise crop replenishment</p>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1.5">
+              <div class="text-xs font-bold text-slate-200 flex items-center gap-2">
+                <span>💡</span> AI Irrigation Guidance:
+              </div>
+              <p id="advRecommendationText" class="text-xs text-slate-300 leading-relaxed"></p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              
+              <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+                <div class="text-[10px] text-slate-400 font-semibold">VPD Transpiration</div>
+                <div id="advVpdValue" class="text-sm sm:text-base font-extrabold text-indigo-300">1.82 kPa</div>
+                <div id="advVpdStatus" class="text-[10px] font-semibold text-emerald-400">Optimal Transpiration</div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+                <div class="text-[10px] text-slate-400 font-semibold">Disease Risk</div>
+                <div id="advDiseaseRisk" class="text-xs font-bold text-emerald-400">LOW (Safe Canopy)</div>
+                <div class="text-[9px] text-slate-500 truncate" id="advDiseaseAdvice">Microclimate well-ventilated.</div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+                <div class="text-[10px] text-slate-400 font-semibold">Leaching Hazard</div>
+                <div id="advLeachingHazard" class="text-xs font-bold text-emerald-400">SAFE (Root Zone Intact)</div>
+                <div class="text-[9px] text-slate-500">Zero groundwater leaching.</div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+            <span>🧠 Model: AgriSense Rule Engine</span>
+            <span>⚡ Response: Instant</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 3: AI CROP DOCTOR (VISION) ==================== -->
+    <div id="tab-vision" class="tab-panel hidden space-y-5">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2" data-i18n="visionTitle">
+            <span>🔬</span> In-Depth AI Leaf & Crop Diagnosis Studio
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Edge Computer Vision detecting crop foliar diseases, insect clusters, nutrient deficiencies (N, P, K, Fe), and climate stresses.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 text-[11px] sm:text-xs">
+          <button data-vision-cat="all" class="px-2.5 py-1 rounded-lg font-semibold bg-emerald-600 text-white transition-all">All</button>
+          <button data-vision-cat="disease" class="px-2.5 py-1 rounded-lg font-semibold bg-slate-800 text-slate-400 hover:text-white transition-all">Diseases</button>
+          <button data-vision-cat="pest" class="px-2.5 py-1 rounded-lg font-semibold bg-slate-800 text-slate-400 hover:text-white transition-all">Pests</button>
+          <button data-vision-cat="nutrient" class="px-2.5 py-1 rounded-lg font-semibold bg-slate-800 text-slate-400 hover:text-white transition-all">Nutrients</button>
+          <button data-vision-cat="stress" class="px-2.5 py-1 rounded-lg font-semibold bg-slate-800 text-slate-400 hover:text-white transition-all">Stresses</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3.5">
+          
+          <h3 class="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-2">
+            <span>📸</span> Leaf Image Visualizer
+          </h3>
+
+          <div id="leafPreviewContainer" class="w-full"></div>
+
+          <!-- Mobile-Friendly Camera / File Upload Box -->
+          <div class="p-3 border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-xl text-center transition-all cursor-pointer bg-slate-900/40">
+            <input type="file" id="leafImageInput" accept="image/*" capture="environment" class="hidden">
+            <label for="leafImageInput" class="cursor-pointer block">
+              <span class="text-2xl">📸</span>
+              <div class="text-xs font-bold text-slate-200 mt-1" data-i18n="dragDropText">Take Photo / Upload Leaf</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Click to open phone camera or upload</div>
+            </label>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Select Sample Dataset</div>
+            <div id="sampleLeafContainer" class="space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
+          </div>
+
+        </div>
+
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-4">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
+            <div>
+              <span id="resCropName" class="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Tomato (Solanum lycopersicum)</span>
+              <h3 id="resDiseaseTitle" class="text-base sm:text-xl font-extrabold text-white mt-0.5">Tomato Late Blight (Phytophthora infestans)</h3>
+            </div>
+            <div class="sm:text-right">
+              <div class="text-[10px] text-slate-400" data-i18n="confidence">Confidence Score</div>
+              <div id="resConfidence" class="text-xl sm:text-2xl font-black text-emerald-400">97.4%</div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400 font-semibold uppercase">Severity:</span>
+              <span id="resSeverity" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800">
+                Critical Risk (85% Foliar Damage)
+              </span>
+            </div>
+            
+            <div class="mt-2">
+              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide mb-1.5" data-i18n="symptoms">Key Identified Symptoms</h4>
+              <ul id="resSymptomsList" class="space-y-1 text-xs text-slate-300"></ul>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+            
+            <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 space-y-1.5">
+              <div class="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                <span>🌿</span> <span data-i18n="organicRemedy">Bio-Organic Treatment</span>
+              </div>
+              <p id="resOrganicText" class="text-xs text-emerald-200 leading-relaxed"></p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-800/60 space-y-1.5">
+              <div class="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+                <span>🧪</span> <span data-i18n="chemicalRemedy">Precise Chemical Treatment (Min. Runoff)</span>
+              </div>
+              <p id="resChemicalText" class="text-xs text-amber-200 leading-relaxed"></p>
+            </div>
+
+          </div>
+
+          <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-800/60 flex items-start gap-2.5">
+            <span class="text-lg">⚠️</span>
+            <div>
+              <div class="text-xs font-bold text-sky-300" data-i18n="leachingWarning">Leaching & Groundwater Caution</div>
+              <p id="resLeachingText" class="text-xs text-sky-200 mt-0.5 leading-relaxed"></p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 4: PREDICTIVE WEATHER ==================== -->
+    <div id="tab-weather" class="tab-panel hidden space-y-5">
+      
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2" data-i18n="weatherTitle">
+            <span>🌦️</span> Microclimate, 6-Hour Trajectory & Anomaly Alert Engine
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Real-time agro-meteorological forecasting with live GPS location and global geocoding for any village or district worldwide.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnDetectGps" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5" data-i18n="btnDetectGps">
+            <span>📍</span> <span>Detect My Farm Location (GPS)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Universal Search Bar with Live Autocomplete -->
+      <div class="glass-panel rounded-2xl p-3.5 border border-slate-800 space-y-2.5">
+        <div class="relative">
+          <div class="flex items-center gap-2 bg-slate-900 rounded-xl px-3 py-2 border border-slate-700 focus-within:border-emerald-500 shadow-inner">
+            <span class="text-slate-400 text-sm">🔍</span>
+            <input id="locationSearchInput" type="text" placeholder="Type ANY village, taluk, district, or city (e.g. Baramati, Ludhiana, Fresno)..." class="w-full bg-transparent text-white text-xs placeholder-slate-500 focus:outline-none font-medium">
+          </div>
+
+          <div id="locationSearchResults" class="hidden absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span class="text-[10px] text-slate-400 font-semibold mr-1">Popular Hubs:</span>
+          <div id="presetLocationChips" class="flex flex-wrap gap-1"></div>
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <h3 class="font-bold text-[11px] text-slate-400 uppercase tracking-wider" data-i18n="anomalyCenter">
+          Severe Weather Anomaly Radar (Next 36 Hours)
+        </h3>
+        <div id="dispAnomalyRadar" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <div class="glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-3">
+          <div class="flex justify-between items-start">
+            <div>
+              <div id="dispWeatherCity" class="font-extrabold text-base sm:text-lg text-white">Ludhiana, Punjab, India</div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span id="dispWeatherCond" class="text-xs text-slate-400">Partly Cloudy</span>
+                <span class="text-[10px] text-slate-600">&bull;</span>
+                <span id="dispCoords" class="text-[10px] font-mono text-emerald-400">30.901°N, 75.857°E</span>
+              </div>
+            </div>
+            <div id="dispWeatherTemp" class="text-3xl sm:text-4xl font-black text-amber-400">32°C</div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-slate-400" data-i18n="forecastRain">6h Rain Prob</span>
+              <div id="dispWeatherRainProb" class="text-lg font-bold text-sky-400 mt-0.5">65%</div>
+            </div>
+            <div>
+              <span class="text-slate-400">Wind Velocity</span>
+              <div class="text-lg font-bold text-slate-200 mt-0.5">12 km/h</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-xs sm:text-sm text-slate-200 mb-2.5" data-i18n="smartDecision">AI Decision Engine Evaluation</h3>
+            <div id="dispWeatherDecision"></div>
+          </div>
+
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-400 flex items-center justify-between">
+            <span>📡 Open-Meteo High Res Model</span>
+            <span>⏱️ 6-Hour Rolling Sync</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-2.5">
+        <h3 class="font-bold text-[11px] text-slate-400 uppercase tracking-wider">6-Hour Rolling Forecast Intervals (Next 36 Hours)</h3>
+        <div id="dispSixHourSlices" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5"></div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 5: ROOT ZONE NITRATE LEACHING SIM ==================== -->
+    <div id="tab-leaching" class="tab-panel hidden space-y-5">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2" data-i18n="leachingTitle">
+            <span>💧</span> Root-Zone Nitrate Leaching & Groundwater Protection Simulator
+          </h2>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="leachingDesc">
+            Demonstrating how over-irrigation carries soluble nitrates and pesticides below the root zone into groundwater.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btnSimOver" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-red-900/60 border border-slate-700 transition-all">
+            ⚠️ Simulate Over-Irrigation
+          </button>
+          <button id="btnSimSmart" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-500 shadow-lg transition-all">
+            🌱 Precision AI Irrigation
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800">
+          <div class="flex justify-between items-center mb-2.5">
+            <h3 class="font-bold text-xs sm:text-sm text-slate-200">Soil Cross-Section Dynamics (0 to 100 cm Depth)</h3>
+            <div class="flex items-center gap-2 text-[11px]">
+              <span class="flex items-center gap-1 text-sky-400"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Nitrate</span>
+              <span class="flex items-center gap-1 text-red-400"><span class="w-2 h-2 rounded-full bg-red-400"></span> Leached</span>
+            </div>
+          </div>
+          <div class="w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
+            <canvas id="leachingCanvas" class="w-full h-72 sm:h-80 block"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3.5 flex flex-col justify-between">
+          <div class="space-y-3">
+            <h3 class="font-bold text-xs sm:text-sm text-slate-200">Ecological & Economic Balance</h3>
+            
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+              <div class="text-[10px] text-slate-400">Water Wasted Below Root Zone</div>
+              <div id="statWaterWasted" class="text-lg font-bold text-white">0 L (Saved)</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+              <div class="text-[10px] text-slate-400">Nitrogen Fertilizer Leached</div>
+              <div id="statNitrateLoss" class="text-lg font-bold text-white">0.0 kg (Preserved)</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+              <div class="text-[10px] text-slate-400">Direct Cost Loss (per Acre)</div>
+              <div id="statFinancialLoss" class="text-lg font-bold text-emerald-400">₹ 0 (100% Saved)</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+              <div class="text-[10px] text-slate-400">Groundwater Aquifer Hazard</div>
+              <div id="statLeachRisk" class="text-xs font-bold text-emerald-400">ZERO (Protected in Root Zone)</div>
+            </div>
+          </div>
+
+          <p class="text-[9px] text-slate-500 leading-relaxed border-t border-slate-800 pt-2.5">
+            *Nitrate ions ($NO_3^-$) do not bind to clay particles. Over-irrigation pushes them straight into the water table.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 6: HARDWARE & BOM SPECS ==================== -->
+    <div id="tab-hardware" class="tab-panel hidden space-y-5">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2" data-i18n="hardwareTitle">
+            <span>⚙️</span> ESP32 System Architecture & Bill of Materials
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Low-cost, ruggedized edge computing unit with solar battery autonomy for remote field deployment.
+          </p>
+        </div>
+
+        <div class="px-3.5 py-2 rounded-xl bg-emerald-950/80 border border-emerald-700 text-left sm:text-right self-start sm:self-auto">
+          <div class="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold" data-i18n="totalCost">Target Unit Cost</div>
+          <div id="bomTotalCost" class="text-base sm:text-lg font-black text-emerald-400">₹ 1,840 INR</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800 text-center">
+          <div class="text-[11px] text-slate-400">Battery Autonomy (No Sun)</div>
+          <div id="statBatteryDays" class="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">14.2 Days</div>
+          <div class="text-[9px] text-slate-500 mt-0.5">18650 Li-ion (2600 mAh)</div>
+        </div>
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800 text-center">
+          <div class="text-[11px] text-slate-400">Daily Power Draw</div>
+          <div id="statDailyMah" class="text-xl sm:text-2xl font-extrabold text-sky-400 mt-1">156 mAh</div>
+          <div class="text-[9px] text-slate-500 mt-0.5">Duty: 15s Active / 15m Sleep</div>
+        </div>
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800 text-center">
+          <div class="text-[11px] text-slate-400">Solar Recharge Time</div>
+          <div id="statRechargeHrs" class="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">1.4 hrs</div>
+          <div class="text-[9px] text-slate-500 mt-0.5">10W Monocrystalline PV</div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3">
+        <h3 class="font-bold text-xs sm:text-sm text-slate-200">Itemized Bill of Materials (BOM)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                <th class="py-2.5 px-3">Component</th>
+                <th class="py-2.5 px-3">Role</th>
+                <th class="py-2.5 px-3 text-center">Qty</th>
+                <th class="py-2.5 px-3 text-right">Cost (INR)</th>
+              </tr>
+            </thead>
+            <tbody id="bomTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-2.5">
+        <h3 class="font-bold text-xs sm:text-sm text-slate-200">ESP32 Pinout & GPIO Signal Routing</h3>
+        <div id="pinoutList" class="space-y-2"></div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 7: PITCH & IMPACT DECK ==================== -->
+    <div id="tab-pitch" class="tab-panel hidden space-y-5">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
+            <span>🏆</span> Smart India Hackathon Pitch & Engineering Summary
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Consolidated presentation deck outline and key engineering answers for jury evaluation.
+          </p>
+        </div>
+        <button onclick="window.print()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md self-start sm:self-auto">
+          📄 Print / Export Advisory Report
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <div class="glass-panel rounded-2xl p-5 border border-slate-800 space-y-2.5">
+          <h3 class="text-sm sm:text-base font-bold text-emerald-400">1. Sense → Analyze → Predict → Act</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Conventional irrigation systems only look at the present soil condition. Our innovation bridges **on-field IoT sensors with AI weather forecasting**. If soil moisture is low but heavy rain is forecasted in the next few hours, the system delays irrigation, saving electricity, preserving reservoir water, and preventing nutrient leaching.
+          </p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 border border-slate-800 space-y-2.5">
+          <h3 class="text-sm sm:text-base font-bold text-sky-400">2. Protecting Nutrients & Water Quality</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Over-irrigation flushes dissolved nitrates ($NO_3^-$) and pesticide residues out of the active root zone into the groundwater table. By delivering water only when and where required, the prototype prevents fertilizer loss, lowers farmer input costs, and protects local water resources.
+          </p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 border border-slate-800 space-y-2.5">
+          <h3 class="text-sm sm:text-base font-bold text-amber-400">3. 100% Offline Edge Resilience</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Rural internet failure does not compromise irrigation safety. The ESP32 executes the core closed-loop sense-and-control logic fully on-device. Weather data and model weight updates sync asynchronously whenever connectivity is restored.
+          </p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 border border-slate-800 space-y-2.5">
+          <h3 class="text-sm sm:text-base font-bold text-purple-400">4. High Return on Investment (ROI)</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            At a component target cost under **₹2,000 per field unit**, the system pays for itself in less than one harvest season through a **30-40% reduction in water pumping electricity** and a **25% reduction in wasted fertilizer applications**.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="border-t border-slate-900 bg-slate-950/80 px-4 lg:px-8 py-3.5 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+      <div>
+        <span>KrishiDrishti AI &bull; Smart India Hackathon Agricultural Innovation</span>
+      </div>
+      <div>
+        <span>Sense &bull; Analyze &bull; Predict &bull; Act &bull; Edge IoT Architecture</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core Scripts -->
+  <script src="js/translations.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/ai-vision.js"></script>
+  <script src="js/leaching-sim.js"></script>
+  <script src="js/hardware.js"></script>
+  <script src="js/telemetry.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
